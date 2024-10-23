@@ -1,17 +1,19 @@
-FROM node:18
+FROM node:18-alpine
 
 WORKDIR /app
 
+# Install dependencies
 COPY package*.json ./
-COPY tsconfig.json ./
-COPY vite.config.ts ./
-
 RUN npm install
 
+# Copy project files
 COPY . .
 
+# Build the app
 RUN npm run build
 
+# Expose port
 EXPOSE 3000
 
-CMD ["npm", "run", "start"]
+# Start the app
+CMD ["npm", "start"]
