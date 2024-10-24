@@ -9,10 +9,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-console.log('Email configuration:');
-console.log('EMAIL_USER:', process.env.EMAIL_USER);
-console.log('EMAIL_PASS set:', !!process.env.EMAIL_PASS);
-console.log('RECIPIENT_EMAIL:', process.env.RECIPIENT_EMAIL);
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -22,7 +18,6 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-// Verify transporter
 transporter.verify((error, success) => {
   if (error) {
     console.error('Error verifying transporter:', error);
@@ -39,10 +34,6 @@ app.post('/email', async (req, res) => {
   }
 
   try {
-    console.log('Attempting to send email...');
-    console.log('From:', process.env.EMAIL_USER);
-    console.log('To:', process.env.RECIPIENT_EMAIL);
-    
     const info = await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: process.env.RECIPIENT_EMAIL,
@@ -51,13 +42,14 @@ app.post('/email', async (req, res) => {
       html: `<p><strong>Name:</strong> ${name}</p><p><strong>Email:</strong> ${email}</p><p><strong>Message:</strong> ${message}</p>`,
     });
 
-    console.log('Email sent successfully:', info.response);
     res.status(200).json({ message: 'Email sent successfully' });
   } catch (error) {
     console.error('Detailed error:', error);
-    res.status(500).json({ message: 'Failed to send email', error: error.message });
+
+    if (error instanceof Error) {
+      res.status(500).json({ message: 'Failed to send email', error: error.message });
+    } else {
+      res.status(500).json({ message: 'Failed to send email due to an unknown error' });
+    }
   }
 });
-
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
